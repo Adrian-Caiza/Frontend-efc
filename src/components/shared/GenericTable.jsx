@@ -27,7 +27,20 @@ const GenericTable = ({ columns, data, onEdit, onDelete }) => {
               {/* Iteramos de nuevo sobre las columnas para sacar el valor exacto de la fila */}
               {columns.map((col, colIndex) => (
                 <td key={colIndex} style={{ padding: '12px' }}>
-                  {row[col.key]}
+                  {/* NUEVA LÓGICA: Si la columna está marcada como imagen, la dibujamos */}
+                  {col.isImage ? (
+                    row[col.key] ? (
+                      <img 
+                        src={`data:image/png;base64,${row[col.key]}`} 
+                        alt="Foto" 
+                        style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc' }} 
+                      />
+                    ) : (
+                      <span style={{ color: '#999', fontSize: '0.9em' }}>Sin foto</span>
+                    )
+                  ) : (
+                    row[col.key]
+                  )}
                 </td>
               ))}
               

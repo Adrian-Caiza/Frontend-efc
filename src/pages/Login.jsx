@@ -5,7 +5,7 @@ import apiService from '../services/apiService';
 const Login = () => {
   const navigate = useNavigate();
   // Estados para capturar lo que el usuario escribe
-  const [email, setEmail] = useState('prueba@correo.com'); // Dejamos tus credenciales por defecto para probar rápido
+  const [email, setEmail] = useState('prueba@correo.com'); 
   const [password, setPassword] = useState('miPassword123');
   const [error, setError] = useState('');
 
@@ -21,6 +21,7 @@ const Login = () => {
       
       localStorage.setItem('userToken', data.token);
       localStorage.setItem('userName', nombreFinal);
+      localStorage.setItem('userImage', data.imgBase64 || '');
       
       // Entramos al sistema
       navigate('/materias'); 

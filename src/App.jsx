@@ -3,29 +3,62 @@ import Login from './pages/Login';
 import CrudView from './pages/CrudView';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 
+// --- CONFIGURACIÓN DE MATERIAS ---
+const materiasColumns = [
+  { key: 'id', label: 'ID' },
+  { key: 'codigo', label: 'Código' },
+  { key: 'nombre', label: 'Nombre' }
+];
+
+const materiasFields = [
+  { name: 'nombre', label: 'Nombre', type: 'text', required: true },
+  { name: 'codigo', label: 'Código', type: 'text', required: true },
+  { name: 'descripcion', label: 'Descripción', type: 'text', required: true },
+  { name: 'creditos', label: 'Créditos', type: 'number', required: true }
+];
+
+// --- CONFIGURACIÓN DE ESTUDIANTES ---
+const estudiantesColumns = [
+  { key: 'imgBase64', label: 'Foto', isImage: true },
+  { key: 'identificacion', label: 'Identificación' },
+  { key: 'nombre', label: 'Nombre' },
+  { key: 'apellido', label: 'Apellido' },
+  { key: 'mail', label: 'Correo' }
+];
+
+const estudiantesFields = [
+  { name: 'imgBase64', label: 'Foto de Perfil', type: 'file', required: false },
+  { name: 'identificacion', label: 'Ident.', type: 'text', required: true },
+  { name: 'nombre', label: 'Nombre', type: 'text', required: true },
+  { name: 'apellido', label: 'Apellido', type: 'text', required: true },
+  { name: 'fechaNacimiento', label: 'F. Nacimiento', type: 'date', required: true },
+  { name: 'ciudad', label: 'Ciudad', type: 'text', required: true },
+  { name: 'direccion', label: 'Dirección', type: 'text', required: true },
+  { name: 'telefono', label: 'Teléfono', type: 'text', required: true },
+  { name: 'mail', label: 'Correo', type: 'email', required: true },
+  { name: 'limiteCreditos', label: 'Créditos', type: 'number', required: true }
+];
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta pública: Cualquiera puede ver el Login */}
         <Route path="/login" element={<Login />} />
 
-        {/* Rutas protegidas: Solo pasan si ProtectedRoute lo permite */}
         <Route element={<ProtectedRoute />}>
-          
-          {/* ¡ESTA ES LA LÍNEA QUE FALTABA! */}
-          {/* Si alguien entra a la raíz "/", lo mandamos directo a materias */}
           <Route path="/" element={<Navigate to="/materias" replace />} />
           
-          <Route path="/materias" element={<CrudView moduleName="Materias" endpointName="materias" />} />
+          {/* Inyectamos la configuración de Materias */}
+          <Route path="/materias" element={
+            <CrudView moduleName="Materias" endpointName="materias" tableColumns={materiasColumns} formFields={materiasFields} />
+          } />
           
-          {/* El día del examen, cambias los nombres de las rutas y del moduleName según el caso */}
-          <Route path="/modulo1" element={<CrudView moduleName="Módulo 1 (ej. Estudiantes/Clientes)" />} />
-          <Route path="/modulo2" element={<CrudView moduleName="Módulo 2 (ej. Materias/Vehículos)" />} />
-          <Route path="/modulo3" element={<CrudView moduleName="Módulo 3 (ej. Matrículas/Reservas)" />} />
+          {/* Inyectamos la configuración de Estudiantes */}
+          <Route path="/estudiantes" element={
+            <CrudView moduleName="Estudiantes" endpointName="estudiantes" tableColumns={estudiantesColumns} formFields={estudiantesFields} />
+          } />
         </Route>
 
-        {/* Ruta por defecto (Catch-all): Si escriben mal la URL, los manda a /login para mayor seguridad */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
