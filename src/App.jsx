@@ -12,6 +12,11 @@ function App() {
 
         {/* Rutas protegidas: Solo pasan si ProtectedRoute lo permite */}
         <Route element={<ProtectedRoute />}>
+          
+          {/* ¡ESTA ES LA LÍNEA QUE FALTABA! */}
+          {/* Si alguien entra a la raíz "/", lo mandamos directo a materias */}
+          <Route path="/" element={<Navigate to="/materias" replace />} />
+          
           <Route path="/materias" element={<CrudView moduleName="Materias" endpointName="materias" />} />
           
           {/* El día del examen, cambias los nombres de las rutas y del moduleName según el caso */}
@@ -20,8 +25,8 @@ function App() {
           <Route path="/modulo3" element={<CrudView moduleName="Módulo 3 (ej. Matrículas/Reservas)" />} />
         </Route>
 
-        {/* Ruta por defecto (Catch-all): Si escriben mal la URL, los manda a la raíz */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Ruta por defecto (Catch-all): Si escriben mal la URL, los manda a /login para mayor seguridad */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

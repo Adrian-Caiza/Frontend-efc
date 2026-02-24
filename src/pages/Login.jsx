@@ -17,9 +17,10 @@ const Login = () => {
       // Llamamos al backend real
       const data = await apiService.login({ email, password });
       
-      // Guardamos el token y el nombre según la estructura de tu compañero
+      const nombreFinal = data.name ? `${data.name} ${data.last}` : 'Usuario';
+      
       localStorage.setItem('userToken', data.token);
-      localStorage.setItem('userName', `${data.nombre} ${data.apellido}`); 
+      localStorage.setItem('userName', nombreFinal);
       
       // Entramos al sistema
       navigate('/materias'); 
