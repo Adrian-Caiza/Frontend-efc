@@ -12,7 +12,7 @@ function App() {
 
         {/* Rutas protegidas: Solo pasan si ProtectedRoute lo permite */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Navigate to="/modulo1" replace />} />
+          <Route path="/materias" element={<CrudView moduleName="Materias" endpointName="materias" />} />
           
           {/* El día del examen, cambias los nombres de las rutas y del moduleName según el caso */}
           <Route path="/modulo1" element={<CrudView moduleName="Módulo 1 (ej. Estudiantes/Clientes)" />} />

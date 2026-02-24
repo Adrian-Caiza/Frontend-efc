@@ -1,34 +1,65 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiService from '../services/apiService';
 
 const Login = () => {
   const navigate = useNavigate();
+  // Estados para capturar lo que el usuario escribe
+  const [email, setEmail] = useState('prueba@correo.com'); // Dejamos tus credenciales por defecto para probar rápido
+  const [password, setPassword] = useState('miPassword123');
+  const [error, setError] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError(''); // Limpiamos errores previos
     
-    // Aquí es donde luego harás el POST al endpoint de tu compañero.
-    // Si falla, debes mostrar la alerta: "Usuario o contraseña incorrectos."
-    
-    // Por ahora simulamos un login exitoso guardando un token falso:
-    localStorage.setItem('userToken', 'token-generico-123');
-    localStorage.setItem('userName', 'Estudiante Administrador'); // Para el mensaje de bienvenida
-    
-    navigate('/'); // Redirigimos a la vista principal
+    try {
+      // Llamamos al backend real
+      const data = await apiService.login({ email, password });
+      
+      // Guardamos el token y el nombre según la estructura de tu compañero
+      localStorage.setItem('userToken', data.token);
+      localStorage.setItem('userName', `${data.nombre} ${data.apellido}`); 
+      
+      // Entramos al sistema
+      navigate('/materias'); 
+    } catch (err) {
+      console.error(err);
+      setError('Usuario o contraseña incorrectos.');
+    }
   };
 
   return (
     <div style={{ padding: '50px', maxWidth: '350px', margin: '0 auto', textAlign: 'center' }}>
       <h2>Inicio de Sesión</h2>
+      
+      {/* Mostrar error si falla el login */}
+      {error && <div style={{ color: 'red', marginBottom: '15px', fontWeight: 'bold' }}>{error}</div>}
+
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <div style={{ textAlign: 'left' }}>
           <label>Email:</label>
-          <input type="email" required style={{ width: '100%', padding: '8px' }} />
+          <input 
+            type="email" 
+            required 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ width: '100%', padding: '8px' }} 
+          />
         </div>
         <div style={{ textAlign: 'left' }}>
           <label>Clave:</label>
-          <input type="password" required style={{ width: '100%', padding: '8px' }} />
+          <input 
+            type="password" 
+            required 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ width: '100%', padding: '8px' }} 
+          />
         </div>
-        <button type="submit" style={{ padding: '10px', cursor: 'pointer' }}>Ingresar</button>
+        <button type="submit" style={{ padding: '10px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}>
+          Ingresar
+        </button>
       </form>
     </div>
   );
