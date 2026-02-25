@@ -39,6 +39,21 @@ const estudiantesFields = [
   { name: 'limiteCreditos', label: 'Créditos', type: 'number', required: true }
 ];
 
+// --- CONFIGURACIÓN DE MATRICULAS ---
+const matriculasColumns = [
+  { key: 'identificacion', label: 'Cédula' },
+  { key: 'estudianteNombre', label: 'Estudiante' },
+  { key: 'materiasInscritas', label: 'Materia' }, 
+  { key: 'totalCreditos', label: 'Créditos' }
+];
+
+const matriculasFields = [
+  { name: 'codigo', label: 'Código', type: 'text', required: true },
+  { name: 'descripcion', label: 'Descripción', type: 'text', required: true },
+  { name: 'estudianteId', label: 'Seleccionar Estudiante', type: 'select', apiOptions: 'estudiantes', required: true },
+  { name: 'materiasIds', label: 'Materias (Mantén Ctrl/Cmd para elegir varias)', type: 'multi-select', apiOptions: 'materias', required: true }
+];
+
 function App() {
   return (
     <BrowserRouter>
@@ -56,6 +71,10 @@ function App() {
           {/* Inyectamos la configuración de Estudiantes */}
           <Route path="/estudiantes" element={
             <CrudView moduleName="Estudiantes" endpointName="estudiantes" tableColumns={estudiantesColumns} formFields={estudiantesFields} />
+          } />
+
+          <Route path="/matriculas" element={
+            <CrudView moduleName="Matrículas" endpointName="matriculas" tableColumns={matriculasColumns} formFields={matriculasFields} hideEdit={true} />
           } />
         </Route>
 

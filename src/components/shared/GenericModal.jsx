@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import apiService from '../../services/apiService';
 
 const GenericModal = ({ isOpen, onClose, onSubmit, title, fields, initialData }) => {
   // Estado para manejar los valores del formulario
   const [formData, setFormData] = useState({});
+  const [optionsData, setOptionsData] = useState({});
 
   // Cada vez que se abre el modal o cambian los datos iniciales (para editar), actualizamos el estado
   useEffect(() => {
@@ -11,15 +13,41 @@ const GenericModal = ({ isOpen, onClose, onSubmit, title, fields, initialData })
     } else {
       // Si no hay datos iniciales (es decir, estamos creando), limpiamos el formulario
       const emptyForm = {};
-      fields.forEach(field => emptyForm[field.name] = '');
+      fields.forEach(field => emptyForm[field.name] = field.type === 'multi-select' ? [] : '');
       setFormData(emptyForm);
     }
   }, [initialData, fields, isOpen]);
+
+  // NUEVO: Cuando se abre el modal, busca los datos relacionales si el campo lo requiere
+  useEffect(() => {
+    const loadOptions = async () => {
+      if (!isOpen) return;
+      const newOptions = {};
+      for (const field of fields) {
+        if (field.apiOptions) {
+          try {
+            const data = await apiService.getAll(field.apiOptions);
+            newOptions[field.name] = data;
+          } catch (e) {
+            console.error(`Error cargando opciones de ${field.apiOptions}`, e);
+          }
+        }
+      }
+      setOptionsData(newOptions);
+    };
+    loadOptions();
+  }, [isOpen, fields]);
 
   // Manejador genérico para cuando el usuario escribe en cualquier input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // NUEVO: Manejador especial para el multi-select (Materias)
+  const handleMultiSelect = (e, fieldName) => {
+    const values = Array.from(e.target.selectedOptions, option => Number(option.value));
+    setFormData(prev => ({ ...prev, [fieldName]: values }));
   };
 
   // NUEVA FUNCIÓN: Transforma la imagen a Base64
@@ -61,34 +89,28 @@ const GenericModal = ({ isOpen, onClose, onSubmit, title, fields, initialData })
             <div key={index} style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
               <label style={{ marginBottom: '5px', fontWeight: 'bold' }}>{field.label}:</label>
               
-              {/* Si el campo es de tipo archivo (file), dibujamos un input diferente */}
               {field.type === 'file' ? (
                 <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, field.name)}
-                    // Es requerido solo si estamos creando y el campo es obligatorio
-                    required={field.required && !formData[field.name]}
-                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }}
-                  />
-                  {/* Si ya hay una imagen cargada (por editar o recién subida), mostramos una mini previsualización */}
-                  {formData[field.name] && (
-                    <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                      <img src={`data:image/png;base64,${formData[field.name]}`} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
-                    </div>
-                  )}
+                  <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, field.name)} required={field.required && !formData[field.name]} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }} />
+                  {formData[field.name] && <img src={`data:image/png;base64,${formData[field.name]}`} alt="Preview" style={{ marginTop: '10px', width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
                 </div>
+              ) : field.type === 'select' ? (
+                // NUEVO: Select para un solo elemento (Estudiantes)
+                <select name={field.name} value={formData[field.name] || ''} onChange={handleChange} required={field.required} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}>
+                  <option value="">Seleccione...</option>
+                  {optionsData[field.name]?.map(opt => (
+                    <option key={opt.id} value={opt.id}>{opt.nombre} {opt.apellido || ''} {opt.identificacion ? `(${opt.identificacion})` : ''}</option>
+                  ))}
+                </select>
+              ) : field.type === 'multi-select' ? (
+                // NUEVO: Multi-Select para varios elementos (Materias)
+                <select multiple name={field.name} value={formData[field.name] || []} onChange={(e) => handleMultiSelect(e, field.name)} required={field.required} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', height: '100px' }}>
+                  {optionsData[field.name]?.map(opt => (
+                    <option key={opt.id} value={opt.id}>{opt.nombre} ({opt.codigo || opt.id})</option>
+                  ))}
+                </select>
               ) : (
-                // Si es un campo de texto normal, lo dibujamos como antes
-                <input
-                  type={field.type || 'text'}
-                  name={field.name}
-                  value={formData[field.name] || ''}
-                  onChange={handleChange}
-                  required={field.required}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
+                <input type={field.type || 'text'} name={field.name} value={formData[field.name] || ''} onChange={handleChange} required={field.required} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
               )}
             </div>
           ))}

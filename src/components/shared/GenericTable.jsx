@@ -46,12 +46,14 @@ const GenericTable = ({ columns, data, onEdit, onDelete }) => {
               
               {/* Botones de acción genéricos */}
               <td style={{ padding: '12px', textAlign: 'center' }}>
-                <button 
-                  onClick={() => onEdit(row)} 
-                  style={{ marginRight: '10px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#ffc107', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
-                >
-                  Editar
-                </button>
+                {onEdit && (
+                  <button 
+                    onClick={() => onEdit(row)} 
+                    style={{ marginRight: '10px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#ffc107', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
+                  >
+                    Editar
+                  </button>
+                )}
                 <button 
                   // Usamos row.id o row._id por si tu compañero usa MySQL o MongoDB
                   onClick={() => onDelete(row.id || row._id)} 

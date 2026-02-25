@@ -5,7 +5,7 @@ import GenericModal from '../components/shared/GenericModal';
 import apiService from '../services/apiService';
 
 // Ahora recibimos las columnas y los campos del formulario como propiedades
-const CrudView = ({ moduleName, endpointName, tableColumns, formFields }) => {
+const CrudView = ({ moduleName, endpointName, tableColumns, formFields, hideEdit }) => {
   const navigate = useNavigate();
   const userName = localStorage.getItem('userName') || 'Usuario';
   const userImage = localStorage.getItem('userImage'); 
@@ -17,6 +17,7 @@ const CrudView = ({ moduleName, endpointName, tableColumns, formFields }) => {
   const fetchData = async () => {
     try {
       const result = await apiService.getAll(endpointName);
+      console.log(`Datos crudos de ${endpointName}:`, result);
       setData(result);
     } catch (error) {
       console.error("Error cargando datos:", error);
@@ -65,6 +66,7 @@ const CrudView = ({ moduleName, endpointName, tableColumns, formFields }) => {
         // Nos aseguramos de enviar la imagen vacía para que el backend no se enoje
         imgBase64: formData.imgBase64 || "" 
       };
+      if (payloadLimpio.estudianteId) payloadLimpio.estudianteId = Number(payloadLimpio.estudianteId);
 
       console.log("JSON exacto que se envía al backend:", payloadLimpio);
 
@@ -98,6 +100,7 @@ const CrudView = ({ moduleName, endpointName, tableColumns, formFields }) => {
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', padding: '15px', backgroundColor: '#f4f4f4', borderRadius: '8px' }}>
         <Link to="/materias" style={{ textDecoration: 'none', fontWeight: 'bold', color: '#007bff' }}>📚 Materias</Link>
         <Link to="/estudiantes" style={{ textDecoration: 'none', fontWeight: 'bold', color: '#007bff' }}>🎓 Estudiantes</Link>
+        <Link to="/matriculas" style={{ textDecoration: 'none', fontWeight: 'bold', color: '#007bff' }}>📝 Matrículas</Link>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -120,7 +123,7 @@ const CrudView = ({ moduleName, endpointName, tableColumns, formFields }) => {
         </button>
       </div>
 
-      <GenericTable columns={tableColumns} data={data} onEdit={handleEdit} onDelete={handleDelete} />
+      <GenericTable columns={tableColumns} data={data} onEdit={hideEdit ? null : handleEdit} onDelete={handleDelete} />
 
       <GenericModal 
         isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
