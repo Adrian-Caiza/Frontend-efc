@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Usamos la URL que generó tu compañero con loca.lt
+
 const API_URL = 'https://epnmatriculas.loca.lt/api'; 
 
 const api = axios.create({
@@ -26,7 +26,7 @@ api.interceptors.request.use(
 
 export const apiService = {
   login: async (credentials) => {
-    // Apunta a /auth/login
+    
     const response = await api.post('/auth/login', credentials);
     return response.data; 
   },
@@ -41,7 +41,7 @@ export const apiService = {
     return response.data;
   },
 
-  // AJUSTE CLAVE: Tu compañero armó el PUT para que reciba el ID dentro del JSON, no en la URL
+  
   update: async (endpointName, data) => {
     const response = await api.put(`/${endpointName}`, data);
     return response.data;

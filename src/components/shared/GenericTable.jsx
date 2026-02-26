@@ -1,42 +1,32 @@
 const GenericTable = ({ columns, data, onEdit, onDelete }) => {
-  // Si no hay datos todavía o el arreglo está vacío, mostramos un mensaje amigable
   if (!data || data.length === 0) {
-    return <p style={{ textAlign: 'center', marginTop: '20px' }}>No hay registros para mostrar.</p>;
+    return <p className="text-center text-gray-500 py-8 font-medium">No hay registros para mostrar en este momento.</p>;
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', backgroundColor: '#fff' }}>
+    <div className="overflow-x-auto">
+      <table className="min-w-full w-full border-collapse text-left">
         <thead>
-          <tr style={{ backgroundColor: '#f4f4f4', borderBottom: '2px solid #ddd' }}>
-            {/* Iteramos sobre las columnas que le pasemos dinámicamente */}
+          <tr className="bg-gray-100 border-b-2 border-gray-200 text-gray-700">
             {columns.map((col, index) => (
-              <th key={index} style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>
+              <th key={index} className="px-6 py-4 text-sm font-bold uppercase tracking-wider">
                 {col.label}
               </th>
             ))}
-            {/* Columna fija para los botones de acción */}
-            <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>Acciones</th>
+            <th className="px-6 py-4 text-sm font-bold uppercase tracking-wider text-center">Acciones</th>
           </tr>
         </thead>
-        <tbody>
-          {/* Iteramos sobre los datos (las filas de la base de datos) */}
+        <tbody className="divide-y divide-gray-200">
           {data.map((row, rowIndex) => (
-            <tr key={rowIndex} style={{ borderBottom: '1px solid #ddd' }}>
+            <tr key={rowIndex} className="hover:bg-blue-50 transition duration-150">
               
-              {/* Iteramos de nuevo sobre las columnas para sacar el valor exacto de la fila */}
               {columns.map((col, colIndex) => (
-                <td key={colIndex} style={{ padding: '12px' }}>
-                  {/* NUEVA LÓGICA: Si la columna está marcada como imagen, la dibujamos */}
+                <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                   {col.isImage ? (
                     row[col.key] ? (
-                      <img 
-                        src={`data:image/png;base64,${row[col.key]}`} 
-                        alt="Foto" 
-                        style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc' }} 
-                      />
+                      <img src={`data:image/png;base64,${row[col.key]}`} alt="Foto" className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" />
                     ) : (
-                      <span style={{ color: '#999', fontSize: '0.9em' }}>Sin foto</span>
+                      <span className="inline-block px-2 py-1 bg-gray-200 text-gray-500 text-xs rounded-full">Sin foto</span>
                     )
                   ) : (
                     row[col.key]
@@ -44,21 +34,13 @@ const GenericTable = ({ columns, data, onEdit, onDelete }) => {
                 </td>
               ))}
               
-              {/* Botones de acción genéricos */}
-              <td style={{ padding: '12px', textAlign: 'center' }}>
+              <td className="px-6 py-4 whitespace-nowrap text-center">
                 {onEdit && (
-                  <button 
-                    onClick={() => onEdit(row)} 
-                    style={{ marginRight: '10px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#ffc107', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
-                  >
+                  <button onClick={() => onEdit(row)} className="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-1.5 px-4 rounded shadow-sm transition mr-2">
                     Editar
                   </button>
                 )}
-                <button 
-                  // Usamos row.id o row._id por si tu compañero usa MySQL o MongoDB
-                  onClick={() => onDelete(row.id || row._id)} 
-                  style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
-                >
+                <button onClick={() => onDelete(row.id || row._id)} className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-4 rounded shadow-sm transition">
                   Eliminar
                 </button>
               </td>

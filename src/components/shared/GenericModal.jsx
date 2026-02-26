@@ -2,35 +2,26 @@ import { useState, useEffect } from 'react';
 import apiService from '../../services/apiService';
 
 const GenericModal = ({ isOpen, onClose, onSubmit, title, fields, initialData }) => {
-  // Estado para manejar los valores del formulario
   const [formData, setFormData] = useState({});
   const [optionsData, setOptionsData] = useState({});
 
-  // Cada vez que se abre el modal o cambian los datos iniciales (para editar), actualizamos el estado
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    } else {
-      // Si no hay datos iniciales (es decir, estamos creando), limpiamos el formulario
+    if (initialData) { setFormData(initialData); } 
+    else {
       const emptyForm = {};
       fields.forEach(field => emptyForm[field.name] = field.type === 'multi-select' ? [] : '');
       setFormData(emptyForm);
     }
   }, [initialData, fields, isOpen]);
 
-  // NUEVO: Cuando se abre el modal, busca los datos relacionales si el campo lo requiere
   useEffect(() => {
     const loadOptions = async () => {
       if (!isOpen) return;
       const newOptions = {};
       for (const field of fields) {
         if (field.apiOptions) {
-          try {
-            const data = await apiService.getAll(field.apiOptions);
-            newOptions[field.name] = data;
-          } catch (e) {
-            console.error(`Error cargando opciones de ${field.apiOptions}`, e);
-          }
+          try { newOptions[field.name] = await apiService.getAll(field.apiOptions); } 
+          catch (e) { console.error(`Error options:`, e); }
         }
       }
       setOptionsData(newOptions);
@@ -38,88 +29,87 @@ const GenericModal = ({ isOpen, onClose, onSubmit, title, fields, initialData })
     loadOptions();
   }, [isOpen, fields]);
 
-  // Manejador genérico para cuando el usuario escribe en cualquier input
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // NUEVO: Manejador especial para el multi-select (Materias)
+  const handleChange = (e) => { setFormData(prev => ({ ...prev, [e.target.name]: e.target.value })); };
+  
   const handleMultiSelect = (e, fieldName) => {
     const values = Array.from(e.target.selectedOptions, option => Number(option.value));
     setFormData(prev => ({ ...prev, [fieldName]: values }));
   };
-
-  // NUEVA FUNCIÓN: Transforma la imagen a Base64
+  
   const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        // Obtenemos el resultado y separamos la metadata del código Base64 puro
-        const base64String = reader.result.split(',')[1];
-        setFormData(prev => ({ ...prev, [fieldName]: base64String }));
-      };
-      // Esto dispara el proceso de lectura
+      reader.onloadend = () => { setFormData(prev => ({ ...prev, [fieldName]: reader.result.split(',')[1] })); };
       reader.readAsDataURL(file);
     }
   };
 
-  // Cuando se envía el formulario, pasamos los datos hacia arriba (a CrudView) y cerramos
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-    onClose();
-  };
+  const handleSubmit = (e) => { e.preventDefault(); onSubmit(formData); onClose(); };
 
-  // Si el modal no está abierto, no renderizamos nada
   if (!isOpen) return null;
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up">
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ margin: 0 }}>{title}</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+        
+        <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50">
+          <h3 className="text-xl font-bold text-gray-800 m-0">{title}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl font-bold transition">&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {fields.map((field, index) => (
-            <div key={index} style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-              <label style={{ marginBottom: '5px', fontWeight: 'bold' }}>{field.label}:</label>
-              
-              {field.type === 'file' ? (
-                <div>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, field.name)} required={field.required && !formData[field.name]} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }} />
-                  {formData[field.name] && <img src={`data:image/png;base64,${formData[field.name]}`} alt="Preview" style={{ marginTop: '10px', width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
-                </div>
-              ) : field.type === 'select' ? (
-                // NUEVO: Select para un solo elemento (Estudiantes)
-                <select name={field.name} value={formData[field.name] || ''} onChange={handleChange} required={field.required} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}>
-                  <option value="">Seleccione...</option>
-                  {optionsData[field.name]?.map(opt => (
-                    <option key={opt.id} value={opt.id}>{opt.nombre} {opt.apellido || ''} {opt.identificacion ? `(${opt.identificacion})` : ''}</option>
-                  ))}
-                </select>
-              ) : field.type === 'multi-select' ? (
-                // NUEVO: Multi-Select para varios elementos (Materias)
-                <select multiple name={field.name} value={formData[field.name] || []} onChange={(e) => handleMultiSelect(e, field.name)} required={field.required} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', height: '100px' }}>
-                  {optionsData[field.name]?.map(opt => (
-                    <option key={opt.id} value={opt.id}>{opt.nombre} ({opt.codigo || opt.id})</option>
-                  ))}
-                </select>
-              ) : (
-                <input type={field.type || 'text'} name={field.name} value={formData[field.name] || ''} onChange={handleChange} required={field.required} style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
-              )}
-            </div>
-          ))}
+        
+        <div className="p-6 overflow-y-auto">
+          <form id="generic-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {fields.map((field, index) => (
+              <div key={index}>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">{field.label}:</label>
+                
+                {field.type === 'file' ? (
+                  <div className="border border-dashed border-gray-300 rounded-lg p-3 text-center hover:bg-gray-50 transition">
+                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, field.name)} required={field.required && !formData[field.name]} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+                    {formData[field.name] && <img src={`data:image/png;base64,${formData[field.name]}`} alt="Preview" className="mt-3 w-16 h-16 object-cover rounded-full mx-auto border-2 border-blue-100 shadow-sm" />}
+                  </div>
+                ) : field.type === 'select' ? (
+                  <select name={field.name} value={formData[field.name] || ''} onChange={handleChange} required={field.required} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition bg-white">
+                    <option value="">Seleccione...</option>
+                    {optionsData[field.name]?.map(opt => (
+                      <option key={opt.id} value={opt.id}>{opt.nombre} {opt.apellido || ''} {opt.identificacion ? `(${opt.identificacion})` : ''}</option>
+                    ))}
+                  </select>
+                ) : field.type === 'multi-select' ? (
+                  <select multiple name={field.name} value={formData[field.name] || []} onChange={(e) => handleMultiSelect(e, field.name)} required={field.required} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition bg-white h-24">
+                    {optionsData[field.name]?.map(opt => (
+                      <option key={opt.id} value={opt.id}>{opt.nombre} ({opt.codigo || opt.id})</option>
+                    ))}
+                  </select>
+                ) : (
+                  
+                  <input 
+                    type={field.type || 'text'} 
+                    name={field.name} 
+                    value={formData[field.name] || ''} 
+                    onChange={handleChange} 
+                    required={field.required} 
+                    pattern={field.pattern}
+                    title={field.title}
+                    min={field.min}
+                    max={field.max}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" 
+                  />
+                )}
+              </div>
+            ))}
+          </form>
+        </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={onClose} style={{ padding: '8px 16px', cursor: 'pointer', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px' }}>Cancelar</button>
-            <button type="submit" style={{ padding: '8px 16px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>Guardar</button>
-          </div>
-        </form>
+        
+        <div className="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="px-5 py-2 rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 font-semibold transition shadow-sm">Cancelar</button>
+          <button type="submit" form="generic-form" className="px-5 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 font-bold transition shadow-sm">Guardar</button>
+        </div>
+
       </div>
     </div>
   );
